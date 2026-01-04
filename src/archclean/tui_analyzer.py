@@ -168,12 +168,15 @@ class LargeFilesApp(App):
                 
                 # Determine category and style
                 str_path = str(path)
-                if str_path.startswith("/home"):
-                    style_color = "green"
-                    category = "User"
-                elif str_path.startswith(("/var/cache", "/tmp", "/var/tmp", "/var/log", "/root/.cache")):
+                
+                # Check for cache/temp locations first, regardless of root
+                # This covers ~/.cache, /var/cache, etc.
+                if "/.cache" in str_path or str_path.startswith(("/var/cache", "/tmp", "/var/tmp", "/var/log")):
                     style_color = "yellow"
                     category = "Cache"
+                elif str_path.startswith("/home"):
+                    style_color = "green"
+                    category = "User"
                 else:
                     style_color = "red"
                     category = "System"
