@@ -2,6 +2,15 @@
 
 A robust CLI tool for safely cleaning Arch Linux systems. ArchClean helps you maintain a tidy system by automating cache cleaning, removing orphans, and analyzing disk usage, all with safety checks and user confirmation.
 
+
+## Requirements
+
+*   Python 3.13+ (for now as it actually doesn't require exactly 3.13+)
+*   Arch Linux (or derivative)
+*   `pacman`
+*   `ncdu` (optional, for analysis)
+
+
 ## Features
 
 *   **System Cleaning**:
@@ -62,12 +71,7 @@ archclean analyze
     archclean full --force
     ```
 
-## Requirements
 
-*   Python 3.13+ (for now as it actually doesn't require exactly 3.13+)
-*   Arch Linux (or derivative)
-*   `pacman`
-*   `ncdu` (optional, for analysis)
 
 ## Disclaimer
 
