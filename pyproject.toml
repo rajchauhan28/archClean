@@ -1,0 +1,28 @@
+[project]
+name = "archclean"
+version = "0.1.11"
+description = "A CLI tool for safely cleaning Arch Linux systems."
+authors = [
+    {name = "Raj singh chauhan",email = "rajsinghchauhan352@gmail.com"}
+]
+readme = "README.md"
+requires-python = ">=3.13,<4.0"
+dependencies = [
+    "click (>=8.1.7,<9.0.0)",
+    "rich (>=13.7.0,<14.0.0)",
+    "sh (>=2.0.6,<3.0.0)"
+]
+
+[tool.poetry]
+packages = [{include = "archclean", from = "src"}]
+
+[tool.poetry.scripts]
+archclean = "archclean.cli:cli"
+
+[build-system]
+requires = ["poetry-core>=2.0.0,<3.0.0"]
+build-backend = "poetry.core.masonry.api"
+[dependency-groups]
+dev = [
+    "pytest (>=9.0.2,<10.0.0)"
+]
