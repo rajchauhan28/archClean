@@ -2,27 +2,50 @@ import sh
 import os
 from rich.console import Console
 from archclean.utils import run_command, confirm_action, check_binary
+from archclean.tui_analyzer import LargeFilesApp
 
 console = Console()
 
 def analyze_disk_usage(force=False):
-    if not check_binary("ncdu"):
-        console.print("[yellow]ncdu is not installed. It is recommended for analyzing disk usage.[/yellow]")
-        if confirm_action("Do you want to install ncdu? (sudo pacman -S ncdu)", force=False):
-            run_command("pacman", ["-S", "ncdu"], sudo=True)
-            if not check_binary("ncdu"):
-                 console.print("[red]Failed to install ncdu or not found after install.[/red]")
-                 return
-        else:
-             console.print("[dim]Skipping disk analysis.[/dim]")
-             return
-
-    target = None
-    if confirm_action("Do you want to analyze the HOME directory (~)?", force):
-        target = os.path.expanduser("~")
-        run_command("ncdu", [target])
+    console.print("[bold cyan]Disk Usage Analyzer[/bold cyan]")
     
-    if confirm_action("Do you want to analyze the ROOT directory (/)? (Requires sudo)", force):
+    choice = "1"
+    if not force:
+        console.print("1. Interactive Large File Cleaner (Built-in TUI)")
+        console.print("2. ncdu (Standard CLI Tool)")
+        from rich.prompt import Prompt
+        choice = Prompt.ask("Choose an analyzer", choices=["1", "2"], default="1")
+
+    target = os.path.expanduser("~")
+    use_root = False
+    
+    # Check if user wants to analyze root
+    if confirm_action("Do you want to analyze the ROOT directory (/) instead of HOME (~)?", force):
         target = "/"
-        # -x: one file system (avoids /proc, /sys, /mnt loops)
-        run_command("ncdu", [target, "-x"], sudo=True)
+        use_root = True
+
+    if choice == "1":
+        # Interactive TUI
+        if use_root:
+            # Refresh sudo credentials before starting TUI to avoid password prompt issues inside TUI
+            run_command("sudo", ["-v"])
+            
+        app = LargeFilesApp(target_path=target, sudo=use_root)
+        app.run()
+    else:
+        # ncdu fallback
+        if not check_binary("ncdu"):
+            console.print("[yellow]ncdu is not installed.[/yellow]")
+            if confirm_action("Do you want to install ncdu? (sudo pacman -S ncdu)", force=False):
+                run_command("pacman", ["-S", "ncdu"], sudo=True)
+                if not check_binary("ncdu"):
+                     console.print("[red]Failed to install ncdu.[/red]")
+                     return
+            else:
+                 return
+
+        args = [target]
+        if use_root:
+            args.append("-x")
+        
+        run_command("ncdu", args, sudo=use_root)
