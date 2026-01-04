@@ -91,7 +91,7 @@ def remove_orphans(force=False):
         tracker.add("System", "Orphans", "Cleaned", "No orphans found")
         return
 
-    ansi_escape = re.compile(r'\x1B(?:[@-Z\\-_]|[[0-?]*[ -/]*[@-~])')
+    ansi_escape = re.compile(r'\x1B(?:[@-Z\\-_]|\[[0-?]*[ -/]*[@-~])')
     orphan_list = [ansi_escape.sub('', pkg).strip() for pkg in orphans.strip().split('\n') if ansi_escape.sub('', pkg).strip()]
 
     count = len(orphan_list)
