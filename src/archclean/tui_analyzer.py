@@ -12,6 +12,28 @@ from pathlib import Path
 from archclean.utils import run_command
 from rich.filesize import decimal
 
+class ResultScreen(Screen):
+    BINDINGS = [("escape", "dismiss", "Close")]
+    
+    def __init__(self, count, size, failed):
+        super().__init__()
+        self.count = count
+        self.reclaimed_size = size
+        self.failed = failed
+
+    def compose(self) -> ComposeResult:
+        yield Container(
+            Label("Deletion Complete", classes="title"),
+            Label(f"Files Deleted: {self.count}"),
+            Label(f"Space Reclaimed: {decimal(self.reclaimed_size)}"),
+            Label(f"Failed: {self.failed}") if self.failed > 0 else Label(""),
+            Button("OK", variant="primary", id="btn-ok"),
+            classes="modal"
+        )
+    
+    def on_button_pressed(self, event: Button.Pressed) -> None:
+        self.dismiss()
+
 class LargeFilesApp(App):
     CSS = """
     Screen {
@@ -46,6 +68,21 @@ class LargeFilesApp(App):
     .hidden {
         display: none;
     }
+    
+    /* Modal CSS */
+    .modal {
+        background: $surface;
+        padding: 2;
+        border: thick $primary;
+        width: 60;
+        height: auto;
+        align: center middle;
+        text-align: center;
+    }
+    .title {
+        text-style: bold;
+        padding-bottom: 1;
+    }
     """
 
     BINDINGS = [
@@ -60,6 +97,10 @@ class LargeFilesApp(App):
         self.limit = limit
         self.sudo = sudo
         self.files_map = {}  # Map value to (path, size)
+        
+        # Session Stats
+        self.total_deleted_count = 0
+        self.total_reclaimed_space = 0
 
     def compose(self) -> ComposeResult:
         yield Header()
@@ -186,25 +227,41 @@ class LargeFilesApp(App):
         
         count = 0
         failed = 0
+        reclaimed_size = 0
+        
         for path in selected:
+            file_size = self.files_map.get(path, 0)
             try:
                 # Remove file
+                success = False
                 if self.sudo:
-                    run_command("rm", ["-f", path], sudo=True)
+                    if run_command("rm", ["-f", path], sudo=True):
+                        success = True
                 else:
                     os.remove(path)
-                count += 1
+                    success = True
+                
+                if success:
+                    count += 1
+                    reclaimed_size += file_size
             except Exception:
                 # Try sudo if failed?
                 if not self.sudo:
                      if run_command("rm", ["-f", path], sudo=True):
                          count += 1
+                         reclaimed_size += file_size
                      else:
                          failed += 1
                 else:
                     failed += 1
         
+        self.total_deleted_count += count
+        self.total_reclaimed_space += reclaimed_size
+        
         self.query_one("#status", Label).update(f"Deleted {count} files. {failed} failed.")
+        
+        # Show Result Screen
+        self.push_screen(ResultScreen(count, reclaimed_size, failed))
         
         # Refresh list
         self.scan_files()
