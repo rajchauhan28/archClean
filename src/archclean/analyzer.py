@@ -32,6 +32,13 @@ def analyze_disk_usage(force=False):
             
         app = LargeFilesApp(target_path=target, sudo=use_root)
         app.run()
+        
+        # Print CLI Summary after TUI exit
+        if app.total_deleted_count > 0:
+            from rich.filesize import decimal
+            console.print("\n[bold green]Cleanup Summary:[/bold green]")
+            console.print(f"  Files Deleted: {app.total_deleted_count}")
+            console.print(f"  Space Reclaimed: {decimal(app.total_reclaimed_space)}")
     else:
         # ncdu fallback
         if not check_binary("ncdu"):
