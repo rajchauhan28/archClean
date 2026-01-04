@@ -31,6 +31,22 @@ A robust CLI tool for safely cleaning Arch Linux systems. ArchClean helps you ma
 
 ## Installation
 
+### From AUR (Arch Linux)
+
+You can install `archclean` from the AUR using your favorite AUR helper:
+
+```bash
+yay -S archclean
+# or
+paru -S archclean
+```
+
+### From PyPI
+
+```bash
+pip install archclean
+```
+
 ### From Source (Poetry)
 
 1.  Clone the repository.
